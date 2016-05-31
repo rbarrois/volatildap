@@ -23,7 +23,7 @@ Usage
         @classmethod
         def setUpClass(cls):
             super(MyTests, cls).setUpClass()
-            cls._slapd = templdap.Slapd(suffix='dc=example,dc=org')
+            cls._slapd = templdap.LdapServer(suffix='dc=example,dc=org')
 
         def setUp(self):
             # Will start the server, or reset/restart it if already started from a previous test.
@@ -39,34 +39,83 @@ Usage
             # Run the tests
 
 
+The ``templdap.LdapServer`` provides a few useful methods:
+
+``start()``
+    Start or restart the server.
+    This will:
+
+    * Clear all data, if any
+    * Start the server if it's not yet running
+    * Populate the initial data
+
+``stop()``
+    Stop the server.
+
+    This will clean up all data and kill the proces.
+
+``add(data)``
+    Add some data, see the ``initial_data`` structure below.
+
+
 Configuration
 -------------
 
-The ``templdap.Slapd`` class accepts a few parameters:
+The ``templdap.LdapServer`` class accepts a few parameters:
 
 ``suffix``
-    The suffix to use for the LDAP tree; defaults to ``dc=example,dc=org``
+    The suffix to use for the LDAP tree
+    
+    *Default:* ``dc=example,dc=org``
 
 ``rootdn``
-    The administrator account for the LDAP server; defaults to ``cn=testadmin,dc=example,dc=org``
+    The administrator account for the LDAP server
+    
+    *Default:* ``cn=testadmin,dc=example,dc=org``
 
 ``rootpw``
-    The administrator password; defaults to a random value available through ``Slapd.rootpw``
+    The administrator password.
+    
+    *Default:* A random value, available through ``LdapServer.rootpw``
 
 ``schemas``
     List of schemas to load; can be either a simple name (e.g ``cosine.schema``; looked up in openldap installation); or a path to a custom one.
-    Defaults to ``['core.schema']``
+    
+    *Default:* ``['core.schema']``
 
-``data``
+``initial_data``
     Dict mapping a distinguished name to a dict of attribute/values:
 
     .. code-block:: python
 
-        slapd(data={
+        slapd(initial_data={
             'ou=people': {
-                'objectClass': [b'organizationalUnit'],
-                'cn': [b'People'],
+                'objectClass': ['organizationalUnit'],
+                'cn': ['People'],
             },
         })
 
     **Note:** When adding data, the suffix can be omitted on objects DNs.
+
+    *Default:* ``{}``
+
+``skip_missing_schemas``
+    When loading schemas, this flag instructs ``templdap`` to continue if some schemas
+    can't be found.
+    
+    *Default:* ``False``
+
+``port``
+    The port to use.
+
+    *Default:* An available TCP port on the system
+
+``slapd_debug``
+    The debug level for slapd; see ``slapd.conf``
+
+    *Default:* ``0``
+
+``max_server_startup_delay``
+    The maximum delay allowed for server startup, in seconds.
+
+    *Default:* ``30``
