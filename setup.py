@@ -41,7 +41,6 @@ setup(
     packages=find_packages(exclude=['tests*']),
     platforms=["OS Independent"],
     install_requires=[
-        'pyldap',
     ],
     setup_requires=[
         'setuptools>=0.8',
