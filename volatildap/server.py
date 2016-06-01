@@ -60,8 +60,9 @@ class OpenLdapPaths(object):
         raise PathError("Unable to locate file %s; tried %s" % (needle, candidates))
 
     _SCHEMA_DIRS = [
-        '/etc/openldap/schema',
-        '/usr/local/openldap/schema',
+        '/etc/ldap/schema',  # Debian
+        '/etc/openldap/schema',  # Gentoo
+        '/usr/local/openldap/schema',  # Manual install
     ]
     _BINARY_DIRS = [
         '/usr/sbin',

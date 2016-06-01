@@ -3,6 +3,12 @@ language: python
 script:
   - tox
 
+addons:
+  apt:
+    packages:
+      - slapd
+      - ldap-utils
+
 install:
   - pip install tox
 
