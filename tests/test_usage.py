@@ -19,7 +19,12 @@ class LdapServerTestCase(unittest.TestCase):
         }
         return server, context
 
-    def assertServerStopped(self, context):
+    def assertServerStopped(self, context, max_delay=5):
+        now = time.time()
+        # Allow some time for proper shutdown
+        while time.time() < now + max_delay and os.path.exists(context['dirname']):
+            time.sleep(0.2)
+
         self.assertFalse(os.path.exists(context['dirname']))
 
         # Check that the process is no longer running.
@@ -95,8 +100,5 @@ class AutoCleanupTests(LdapServerTestCase):
         server, context = self._launch_server()
 
         del server
-
-        # Allow some time for proper shutdown
-        time.sleep(1)
 
         self.assertServerStopped(context)
