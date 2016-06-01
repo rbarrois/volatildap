@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # This software is distributed under the two-clause BSD license.
 
+import codecs
 import os
 import re
 import sys
@@ -14,7 +15,7 @@ def get_version(package_name):
     version_re = re.compile(r"^VERSION = [\"']([\w_.-]+)[\"']$")
     package_components = package_name.split('.')
     init_path = os.path.join(root_dir, *(package_components + ['version.py']))
-    with open(init_path, 'r', encoding='utf-8') as f:
+    with codecs.open(init_path, 'r', 'utf-8') as f:
         for line in f:
             match = version_re.match(line[:-1])
             if match:
@@ -29,7 +30,7 @@ setup(
     name=PACKAGE,
     version=get_version(PACKAGE),
     description="Temporary slapd launcher for testing purposes",
-    long_description=''.join(open('README.rst', 'r', encoding='utf-8').readlines()),
+    long_description=''.join(codecs.open('README.rst', 'r', 'utf-8').readlines()),
     author="Raphaël Barrois",
     author_email="raphael.barrois+%s@polytechnique.org" % PACKAGE,
     license="BSD",
