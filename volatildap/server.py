@@ -299,7 +299,7 @@ class LdapServer(object):
             s = socket.socket()
             try:
                 s.connect(('localhost', self.port))
-            except socket.error as e:
+            except socket.error:
                 # Not ready yet, sleep
                 time.sleep(0.5)
             else:
