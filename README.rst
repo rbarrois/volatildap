@@ -2,6 +2,25 @@ volatildap
 ==========
 
 
+.. image:: https://secure.travis-ci.org/rbarrois/volatildap.png?branch=master
+    :target: http://travis-ci.org/rbarrois/volatildap/
+
+.. image:: https://img.shields.io/pypi/v/volatildap.svg
+    :target: https://pypi.python.org/pypi/volatildap/
+    :alt: Latest Version
+
+.. image:: https://img.shields.io/pypi/pyversions/volatildap.svg
+    :target: https://pypi.python.org/pypi/volatildap/
+    :alt: Supported Python versions
+
+.. image:: https://img.shields.io/pypi/wheel/volatildap.svg
+    :target: https://pypi.python.org/pypi/volatildap/
+    :alt: Wheel status
+
+.. image:: https://img.shields.io/pypi/l/volatildap.svg
+    :target: https://pypi.python.org/pypi/volatildap/
+    :alt: License
+
 ``volatildap`` provides simple helpers for testing code against a LDAP database.
 
 Its main features include:
