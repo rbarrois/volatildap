@@ -57,6 +57,13 @@ The ``volatildap.LdapServer`` provides a few useful methods:
 ``add(data)``
     Add some data, see the ``initial_data`` structure below.
 
+``get(dn)``
+    Retrieve an object by its distinguished name;
+
+    Returns a dictionary mapping an attribute to the list of its values, as bytes.
+
+    Raises ``KeyError`` if the distinguished name is unknown to the underlying database.
+
 
 Configuration
 -------------
