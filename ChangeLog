@@ -1,6 +1,20 @@
 ChangeLog
 =========
 
+Roadmap
+-------
+
+* Add support for TLS
+
+
+.. _v1.0.2:
+
+1.0.2 (2016-06-02)
+------------------
+
+*Improvements:*
+
+    - Add data starting with containers before contained entities.
 
 .. _v1.0.1:
 

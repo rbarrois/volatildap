@@ -178,10 +178,12 @@ class LdapServer(object):
             ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
-        stdout, _stderr = sp.communicate(ldif)
-        if sp.wait() != 0:
-            raise RuntimeError("ldapadd failed: %s" % stdout)
+        stdout, stderr = sp.communicate(ldif)
+        retcode = sp.wait()
+        if retcode != 0:
+            raise RuntimeError("ldapadd failed with code %d: %s %s" % (retcode, stdout, stderr))
 
     def get(self, dn):
         dn = self._normalize_dn(dn)
@@ -211,7 +213,8 @@ class LdapServer(object):
         return ldif_to_dict(stdout)
 
     def _data_as_ldif(self, data):
-        for dn, attributes in data.items():
+        # Sort by dn length, thus adding parents first.
+        for dn, attributes in sorted(data.items(), key=lambda e: (len(e[0]), e)):
             yield ldif_encode('dn', self._normalize_dn(dn))
             for attribute, values in sorted(attributes.items()):
                 for value in values:
