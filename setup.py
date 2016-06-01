@@ -57,4 +57,5 @@ setup(
         "Topic :: Software Development :: Testing",
         "Topic :: System :: Systems Administration :: Authentication/Directory :: LDAP",
     ],
+    test_suite='tests',
 )

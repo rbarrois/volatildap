@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 import base64
 import logging
 import os
+import re
 import random
 import socket
 import subprocess
@@ -44,6 +45,7 @@ class OpenLdapPaths(object):
 
         self.slapd = self._find_file('slapd', self._BINARY_DIRS)
         self.ldapadd = self._find_file('ldapadd', self._BINARY_DIRS)
+        self.ldapsearch = self._find_file('ldapsearch', self._BINARY_DIRS)
         self.slaptest = self._find_file('slaptest', self._BINARY_DIRS)
 
     def _find_file(self, needle, candidates):
@@ -71,16 +73,16 @@ class LdapServer(object):
     _DATASUBDIR = 'ldif-data'
 
     def __init__(self,
-            suffix=DEFAULT_SUFFIX,
-            rootdn=DEFAULT_ROOTDN,
-            rootpw='',
-            schemas=DEFAULT_SCHEMAS,
-            initial_data=None,
-            skip_missing_schemas=False,
-            max_server_startup_delay=DEFAULT_STARTUP_DELAY,
-            port=None,
-            slapd_debug=DEFAULT_SLAPD_DEBUG,
-            ):
+                 suffix=DEFAULT_SUFFIX,
+                 rootdn=DEFAULT_ROOTDN,
+                 rootpw='',
+                 schemas=DEFAULT_SCHEMAS,
+                 initial_data=None,
+                 skip_missing_schemas=False,
+                 max_server_startup_delay=DEFAULT_STARTUP_DELAY,
+                 port=None,
+                 slapd_debug=DEFAULT_SLAPD_DEBUG,
+                 ):
 
         self.paths = OpenLdapPaths()
         self.suffix = suffix
@@ -133,6 +135,12 @@ class LdapServer(object):
         yield quote('rootdn %s', self.rootdn)
         yield quote('rootpw %s', self.rootpw)
 
+    def _normalize_dn(self, dn):
+        if not dn.endswith(self.suffix):
+            return '%s,%s' % (dn, self.suffix)
+        else:
+            return dn
+
     def start(self):
         try:
             if self._process is None:
@@ -151,8 +159,9 @@ class LdapServer(object):
 
     def add(self, data):
         lines = '\n'.join(self._data_as_ldif(data))
+        ldif = lines.encode('utf-8')
 
-        logger.info("Adding data %r", lines)
+        logger.info("Adding data %r", ldif)
         sp = subprocess.Popen(
             [
                 self.paths.ldapadd,
@@ -164,15 +173,40 @@ class LdapServer(object):
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
         )
-        stdout = sp.communicate(lines.encode('utf-8'))
+        stdout, _stderr = sp.communicate(ldif)
         if sp.wait() != 0:
             raise RuntimeError("ldapadd failed: %s" % stdout)
 
+    def get(self, dn):
+        dn = self._normalize_dn(dn)
+        logger.info("Fetching data at %s", dn)
+        sp = subprocess.Popen(
+            [
+                self.paths.ldapsearch,
+                '-x',
+                '-D', self.rootdn,
+                '-w', self.rootpw,
+                '-H', self.uri,
+                '-LLL',  # As LDIF
+                '-b', dn,  # Fetch this specific DN
+                '-s', 'base',
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        stdout, stderr = sp.communicate()
+        retcode = sp.wait()
+        if retcode == 32:
+            # Not found
+            raise KeyError("Entry %s not found: %r" % (dn, stderr))
+        if retcode != 0:
+            raise RuntimeError("ldapsearch failed with code %d: %r" % (retcode, stderr))
+
+        return ldif_to_dict(stdout)
+
     def _data_as_ldif(self, data):
         for dn, attributes in data.items():
-            if not dn.endswith(self.suffix):
-                dn = '%s,%s' % (dn, self.suffix)
-            yield ldif_encode('dn', dn)
+            yield ldif_encode('dn', self._normalize_dn(dn))
             for attribute, values in sorted(attributes.items()):
                 for value in values:
                     yield ldif_encode(attribute, value)
@@ -310,6 +344,7 @@ _BASE_LDIF = [
     if chr(i) not in [' ', '<', ':']
 ]
 
+
 def ldif_encode(attr, value):
     """Encode a attribute: value pair for the LDIF format.
 
@@ -330,3 +365,21 @@ def ldif_encode(attr, value):
         return '%s:: %s' % (attr, base64.b64encode(value.encode('utf-8')).decode('ascii'))
     else:
         return '%s: %s' % (attr, value)
+
+
+def ldif_to_dict(ldif_lines):
+    attributes = {}
+    for line in ldif_lines.decode('ascii').split('\n'):
+        if not line.strip():
+            continue
+        m = re.match(r'(\w+)(:?): (.*)', line.strip())
+        if m is None:
+            raise ValueError("Invalid line in ldif output: %r" % line)
+
+        field, is_extended, value = m.groups()
+        if is_extended:
+            value = base64.b64decode(value.encode('ascii'))
+        else:
+            value = value.encode('ascii')
+        attributes.setdefault(field, []).append(value)
+    return attributes
