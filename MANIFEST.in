@@ -1,7 +1,7 @@
 include ChangeLog LICENSE README.rst
 include requirements*.txt
 
-graft templdap
+graft volatildap
 
 prune tests
 

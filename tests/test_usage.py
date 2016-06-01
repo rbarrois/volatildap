@@ -3,12 +3,12 @@ import psutil
 import time
 import unittest
 
-import templdap
+import volatildap
 
 
 class LdapServerTestCase(unittest.TestCase):
     def _launch_server(self, **kwargs):
-        server = templdap.LdapServer(**kwargs)
+        server = volatildap.LdapServer(**kwargs)
         server.start()
         context = {
             'dirname': server._tempdir.name,

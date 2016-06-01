@@ -1,8 +1,8 @@
-templdap
-========
+volatildap
+==========
 
 
-Templdap provides simple helpers for testing code against a LDAP database.
+``volatildap`` provides simple helpers for testing code against a LDAP database.
 
 Its main features include:
 
@@ -16,14 +16,14 @@ Usage
 
 .. code-block:: python
 
-    import templdap
+    import volatildap
 
     class MyTests(unittest.TestCase):
 
         @classmethod
         def setUpClass(cls):
             super(MyTests, cls).setUpClass()
-            cls._slapd = templdap.LdapServer(suffix='dc=example,dc=org')
+            cls._slapd = volatildap.LdapServer(suffix='dc=example,dc=org')
 
         def setUp(self):
             # Will start the server, or reset/restart it if already started from a previous test.
@@ -39,7 +39,7 @@ Usage
             # Run the tests
 
 
-The ``templdap.LdapServer`` provides a few useful methods:
+The ``volatildap.LdapServer`` provides a few useful methods:
 
 ``start()``
     Start or restart the server.
@@ -61,7 +61,7 @@ The ``templdap.LdapServer`` provides a few useful methods:
 Configuration
 -------------
 
-The ``templdap.LdapServer`` class accepts a few parameters:
+The ``volatildap.LdapServer`` class accepts a few parameters:
 
 ``suffix``
     The suffix to use for the LDAP tree
@@ -100,7 +100,7 @@ The ``templdap.LdapServer`` class accepts a few parameters:
     *Default:* ``{}``
 
 ``skip_missing_schemas``
-    When loading schemas, this flag instructs ``templdap`` to continue if some schemas
+    When loading schemas, this flag instructs ``volatildap`` to continue if some schemas
     can't be found.
     
     *Default:* ``False``

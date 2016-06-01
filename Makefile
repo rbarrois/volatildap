@@ -1,4 +1,4 @@
-PACKAGE=templdap
+PACKAGE=volatildap
 TESTS_DIR=tests
 
 FLAKE8 = flake8

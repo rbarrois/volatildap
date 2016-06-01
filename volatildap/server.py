@@ -30,7 +30,7 @@ DEFAULT_SLAPD_DEBUG = 0
 
 
 class LdapError(Exception):
-    """Exceptions for templdap"""
+    """Exceptions for volatildap"""
 
 
 class PathError(LdapError):
