@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# This software is distributed under the two-clause BSD license.
 
 """Temporary LDAP server based on OpenLdap for tests."""
 
