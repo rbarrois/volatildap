@@ -19,7 +19,7 @@ testall:
 	tox
 
 test:
-	python -m unittest $(TESTS_DIR)
+	python -Wdefault -m unittest discover $(TESTS_DIR)
 
 # Note: we run the linter in two runs, because our __init__.py files has specific warnings we want to exclude
 lint:
