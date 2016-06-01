@@ -6,15 +6,18 @@ from __future__ import unicode_literals
 
 
 import base64
+import codecs
 import logging
 import os
 import re
 import random
 import socket
 import subprocess
-import tempfile
 import time
 import sys
+
+
+from . import compat
 
 
 logger = logging.getLogger(__name__.split('.')[0])
@@ -25,7 +28,7 @@ DEFAULT_ROOTDN = 'cn=testadmin,%s' % DEFAULT_SUFFIX
 DEFAULT_SCHEMAS = (
     'core.schema',
 )
-DEFAULT_STARTUP_DELAY = 30
+DEFAULT_STARTUP_DELAY = 15
 DEFAULT_SLAPD_DEBUG = 0
 
 
@@ -235,14 +238,14 @@ class LdapServer(object):
         }
 
     def _setup(self):
-        self._tempdir = tempfile.TemporaryDirectory()
+        self._tempdir = compat.TemporaryDirectory()
         logger.info("Setting up openldap server in %s", self._tempdir.name)
 
         # Create datadir
         os.mkdir(self._datadir)
 
         # Write configuration
-        with open(self._slapd_conf, 'w', encoding='utf-8') as f:
+        with codecs.open(self._slapd_conf, 'w', encoding='utf-8') as f:
             f.write('\n'.join(self._configuration_lines()))
 
         slaptest = subprocess.Popen([
