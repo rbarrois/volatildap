@@ -290,20 +290,22 @@ class LdapServer(object):
     def _poll_slapd(self, timeout=DEFAULT_STARTUP_DELAY):
         """Poll slapd port until available."""
 
-        s = socket.socket()
         begin = time.time()
+        time.sleep(0.5)
         while time.time() < begin + timeout:
             if self._process.poll() is not None:
                 raise RuntimeError("LDAP server has exited before starting listen.")
 
+            s = socket.socket()
             try:
                 s.connect(('localhost', self.port))
-            except socket.error:
+            except socket.error as e:
                 # Not ready yet, sleep
                 time.sleep(0.5)
             else:
-                s.close()
                 return
+            finally:
+                s.close()
 
         raise RuntimeError("LDAP server not responding within %s seconds." % timeout)
 
