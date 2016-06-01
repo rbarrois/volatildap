@@ -82,6 +82,23 @@ class ReadWriteTests(LdapServerTestCase):
         server.stop()
         self.assertServerStopped(context)
 
+    def test_clear_data(self):
+        server, context = self._launch_server()
+        server.add(self.data)
+        self.assertIsNotNone(server.get('ou=test,dc=example,dc=org'))
+
+        server.start()  # Actually a restart
+
+        # Custom data has been removed
+        with self.assertRaises(KeyError):
+            server.get('ou=test,dc=example,dc=org')
+
+        # Core data is still there
+        self.assertIsNotNone(server.get('dc=example,dc=org'))
+
+        server.stop()
+        self.assertServerStopped(context)
+
 
 class AutoCleanupTests(LdapServerTestCase):
 
@@ -91,14 +108,5 @@ class AutoCleanupTests(LdapServerTestCase):
         server, context = self._launch_server()
 
         server.stop()
-
-        self.assertServerStopped(context)
-
-    def test_stops_on_del(self):
-        """Deleting the LdapServer object causes its cleanup."""
-
-        server, context = self._launch_server()
-
-        del server
 
         self.assertServerStopped(context)

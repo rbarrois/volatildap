@@ -10,12 +10,12 @@ import base64
 import codecs
 import logging
 import os
-import re
 import random
+import re
 import socket
 import subprocess
-import time
 import sys
+import time
 
 
 from . import compat
@@ -49,6 +49,7 @@ class OpenLdapPaths(object):
 
         self.slapd = self._find_file('slapd', self._BINARY_DIRS)
         self.ldapadd = self._find_file('ldapadd', self._BINARY_DIRS)
+        self.ldapdelete = self._find_file('ldapdelete', self._BINARY_DIRS)
         self.ldapsearch = self._find_file('ldapsearch', self._BINARY_DIRS)
         self.slaptest = self._find_file('slaptest', self._BINARY_DIRS)
 
@@ -280,14 +281,48 @@ class LdapServer(object):
             self.add(self.initial_data)
 
     def _clear(self):
-        for root, dirs, files in os.walk(self._datadir, topdown=False):
-            for name in files:
-                os.unlink()
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
+        logger.info("Preparing to clear all data")
+        sp = subprocess.Popen(
+            [
+                self.paths.ldapsearch,
+                '-x',
+                '-D', self.rootdn,
+                '-w', self.rootpw,
+                '-H', self.uri,
+                '-LLL',  # As LDIF
+                '-b', self.suffix,  # The whole tree
+                '-s', 'sub',  # All children
+                'dn',  # Fetch only the 'dn' field
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        stdout, stderr = sp.communicate()
+        retcode = sp.wait()
+        if retcode != 0:
+            raise RuntimeError("ldapsearch failed with code %d: %r" % (retcode, stderr))
 
-        # We must not delete the ldif datastore.
-        assert os.path.exists(self._datadir)
+        data = ldif_to_dict(stdout)
+        dns = [dn.decode('utf-8') for dn in data['dn']]
+        # Remove the furthest first
+        dns = sorted(dns, key=lambda dn: (len(dn), dn), reverse=True)
+
+        logger.info("Deleting entries %s", dns)
+        sp = subprocess.Popen(
+            [
+                self.paths.ldapdelete,
+                '-x',
+                '-D', self.rootdn,
+                '-w', self.rootpw,
+                '-H', self.uri,
+            ] + dns,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        _stdout, stderr = sp.communicate()
+        retcode = sp.wait()
+        if retcode != 0:
+            raise RuntimeError("ldapdelete failed with code %d: %r" % (retcode, stderr))
 
     def _poll_slapd(self, timeout=DEFAULT_STARTUP_DELAY):
         """Poll slapd port until available."""
@@ -321,7 +356,8 @@ class LdapServer(object):
             self._tempdir = None
 
     def __del__(self):
-        self.stop()
+        if self._process is not None:
+            logger.warning("Server %s removed from memory before being stopped!", self)
 
     def __repr__(self):
         if self._process:

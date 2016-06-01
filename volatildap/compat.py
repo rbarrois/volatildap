@@ -3,9 +3,9 @@
 
 """Compatibility layer for legacy Python (< 3.4 as of 2016)"""
 
-import tempfile
 import shutil
 import sys
+import tempfile
 
 LEGACY_PY = sys.version_info[0] < 3
 
