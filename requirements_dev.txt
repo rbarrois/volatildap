@@ -1,0 +1,6 @@
+-e .
+
+flake8
+psutil
+check-manifest
+tox

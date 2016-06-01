@@ -1,0 +1,10 @@
+include ChangeLog LICENSE README.rst
+include requirements*.txt
+
+graft templdap
+
+prune tests
+
+global-exclude .py[cod] __pycache__ .swp
+
+exclude Makefile tox.ini .flake8
