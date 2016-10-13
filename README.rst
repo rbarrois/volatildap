@@ -145,3 +145,11 @@ The ``volatildap.LdapServer`` class accepts a few parameters:
     The maximum delay allowed for server startup, in seconds.
 
     *Default:* ``30``
+
+
+Per-distribution specificities
+------------------------------
+
+Ubuntu
+    Under Ubuntu, the default AppArmor policy does not allow ``slapd`` (the LDAP daemon) to read temporary folders.
+    Users should update the ``/etc/apparmor.d/usr.sbin.slapd`` file and add ``/tmp/** rw`` there.
