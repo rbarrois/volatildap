@@ -146,6 +146,11 @@ The ``volatildap.LdapServer`` class accepts a few parameters:
 
     *Default:* ``30``
 
+``db_backend``
+    The database backend used by the server : ``DB_BACKEND_LDIF`` or ``DB_BACKEND_HDB`` backend.
+
+    *Default:* ``DB_BACKEND_LDIF``
+
 
 Per-distribution specificities
 ------------------------------
