@@ -32,6 +32,9 @@ DEFAULT_SCHEMAS = (
 DEFAULT_STARTUP_DELAY = 15
 DEFAULT_SLAPD_DEBUG = 0
 
+DB_BACKEND_LDIF = 'ldif'
+DB_BACKEND_HDB = 'hdb'
+
 
 class LdapError(Exception):
     """Exceptions for volatildap"""
@@ -88,6 +91,7 @@ class LdapServer(object):
                  max_server_startup_delay=DEFAULT_STARTUP_DELAY,
                  port=None,
                  slapd_debug=DEFAULT_SLAPD_DEBUG,
+                 db_backend=DB_BACKEND_LDIF
                  ):
 
         self.paths = OpenLdapPaths()
@@ -99,6 +103,10 @@ class LdapServer(object):
         self.max_server_startup_delay = max_server_startup_delay
         self.port = port or find_available_port()
         self.slapd_debug = slapd_debug
+        self.db_backend = db_backend
+
+        if self.db_backend not in [DB_BACKEND_LDIF, DB_BACKEND_HDB]:
+            raise LdapError("LdapServer database backend is not supported (%s)" % self.db_backend)
 
         self._tempdir = None
         self._process = None
@@ -135,7 +143,11 @@ class LdapServer(object):
             return base % tuple("%s" % arg.replace('\\', '\\\\').replace('"', '\\"') for arg in args)
         for schema in self.schemas:
             yield quote('include %s', schema)
-        yield quote('database ldif')
+        if self.db_backend == DB_BACKEND_HDB:
+            yield quote('moduleload back_hdb')
+            yield quote('database hdb')
+        else:
+            yield quote('database ldif')
         yield quote('directory %s', self._datadir)
         yield quote('suffix %s', self.suffix)
         yield quote('rootdn %s', self.rootdn)
@@ -257,6 +269,7 @@ class LdapServer(object):
         slaptest = subprocess.Popen([
             self.paths.slaptest,
             '-f', self._slapd_conf,
+            '-u',  # only test the config file
         ])
         if slaptest.wait() != 0:
             raise RuntimeError("Testing configuration failed.")
