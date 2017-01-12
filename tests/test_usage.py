@@ -7,7 +7,6 @@ import time
 import unittest
 
 import volatildap
-from volatildap.server import DB_BACKEND_HDB
 
 
 class LdapServerTestCase(unittest.TestCase):
@@ -96,27 +95,6 @@ class ReadWriteTests(LdapServerTestCase):
 
         # Core data is still there
         self.assertIsNotNone(server.get('dc=example,dc=org'))
-
-        server.stop()
-        self.assertServerStopped(context)
-
-    def test_initial_data_with_hdb_backend(self):
-        # Start server with HDB backend
-        server, context = self._launch_server(initial_data=self.data, db_backend=DB_BACKEND_HDB)
-
-        # Check the configuration file
-        configuration_lines = list(server._configuration_lines())
-        self.assertIn("moduleload back_hdb", configuration_lines)
-        self.assertIn("database hdb", configuration_lines)
-        self.assertNotIn("database ldif", configuration_lines)
-
-        # Assert a get works
-        entry = server.get('ou=test,dc=example,dc=org')
-        self.assertEqual({
-            'dn': [b'ou=test,dc=example,dc=org'],
-            'objectClass': [b'organizationalUnit'],
-            'ou': [b'test'],
-        }, entry)
 
         server.stop()
         self.assertServerStopped(context)
