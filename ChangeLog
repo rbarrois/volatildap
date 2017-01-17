@@ -7,6 +7,17 @@ Roadmap
 * Add support for TLS
 
 
+.. _v1.1.0:
+
+1.1.0 (2017-01-17)
+------------------
+
+*Improvements:*
+
+    - Replace the ``ldif`` backend with the more standard ``hdb``; this should allow to send
+      paginated requests against a volatildap instance.
+
+
 .. _v1.0.2:
 
 1.0.2 (2016-06-02)
