@@ -83,6 +83,10 @@ The ``volatildap.LdapServer`` provides a few useful methods:
 
     Raises ``KeyError`` if the distinguished name is unknown to the underlying database.
 
+``reset()``
+    Restore the server to its pristine, initial state.
+    This includes loading the inital_data.
+
 
 Configuration
 -------------
