@@ -211,7 +211,13 @@ class LdapServer(object):
         if retcode != 0:
             raise RuntimeError("ldapsearch failed with code %d: %r" % (retcode, stderr))
 
-        return ldif_to_dict(stdout)
+        entries = ldif_to_entries(stdout)
+        return entries[dn]
+
+    def reset(self):
+        """Reset all entries except inital ones."""
+        self._clear()
+        self._populate()
 
     def _data_as_ldif(self, data):
         # Sort by dn length, thus adding parents first.
@@ -307,8 +313,8 @@ class LdapServer(object):
         if retcode != 0:
             raise RuntimeError("ldapsearch failed with code %d: %r" % (retcode, stderr))
 
-        data = ldif_to_dict(stdout)
-        dns = [dn.decode('utf-8') for dn in data['dn']]
+        data = ldif_to_entries(stdout)
+        dns = data.keys()
         # Remove the furthest first
         dns = sorted(dns, key=lambda dn: (len(dn), dn), reverse=True)
 
@@ -415,19 +421,27 @@ def ldif_encode(attr, value):
         return '%s: %s' % (attr, value)
 
 
-def ldif_to_dict(ldif_lines):
-    attributes = {}
-    for line in ldif_lines.decode('ascii').split('\n'):
-        if not line.strip():
+def ldif_to_entries(ldif_lines):
+    entries = {}
+    for entry in ldif_lines.decode('ascii').split('\n\n'):
+        if not entry.strip():
             continue
-        m = re.match(r'(\w+)(:?): (.*)', line.strip())
-        if m is None:
-            raise ValueError("Invalid line in ldif output: %r" % line)
 
-        field, is_extended, value = m.groups()
-        if is_extended:
-            value = base64.b64decode(value.encode('ascii'))
-        else:
-            value = value.encode('ascii')
-        attributes.setdefault(field, []).append(value)
-    return attributes
+        attributes = {}
+        for line in entry.split('\n'):
+            if not line.strip():
+                continue
+            m = re.match(r'(\w+)(:?): (.*)', line.strip())
+            if m is None:
+                raise ValueError("Invalid line in ldif output: %r" % line)
+
+            field, is_extended, value = m.groups()
+            if is_extended:
+                value = base64.b64decode(value.encode('ascii'))
+            else:
+                value = value.encode('ascii')
+            attributes.setdefault(field, []).append(value)
+        dns = attributes.get('dn', [b''])
+        assert len(dns) == 1
+        entries[dns[0].decode('utf-8')] = attributes
+    return entries

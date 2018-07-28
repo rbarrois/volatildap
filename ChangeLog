@@ -7,6 +7,15 @@ Roadmap
 * Add support for TLS
 
 
+.. _v1.2.0:
+
+1.2.0 (2018-07-28)
+------------------
+
+*Improvements:*
+
+    - Add ``server.reset()``, which clears all entries except initial ones.
+
 .. _v1.1.0:
 
 1.1.0 (2017-01-17)

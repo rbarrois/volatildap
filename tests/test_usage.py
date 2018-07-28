@@ -100,6 +100,41 @@ class ReadWriteTests(LdapServerTestCase):
         self.assertServerStopped(context)
 
 
+class ResetTests(LdapServerTestCase):
+    data = {
+        'ou=test': {
+            'objectClass': ['organizationalUnit'],
+            'ou': ['test'],
+        },
+    }
+
+    def test_cleanup(self):
+        server, context = self._launch_server(initial_data=self.data)
+        extra = {
+            'ou=subarea,ou=test': {
+                'objectClass': ['organizationalUnit'],
+            },
+        }
+        server.add(extra)
+
+        entry = server.get('ou=subarea,ou=test,dc=example,dc=org')
+        server.reset()
+
+        # Extra data should have been removed
+        self.assertRaises(KeyError, server.get, 'ou=subarea,ou=test,dc=example,dc=org')
+
+        # Initial data should still be here
+        entry = server.get('ou=test,dc=example,dc=org')
+        self.assertEqual({
+            'dn': [b'ou=test,dc=example,dc=org'],
+            'objectClass': [b'organizationalUnit'],
+            'ou': [b'test'],
+        }, entry)
+
+        server.stop()
+        self.assertServerStopped(context)
+
+
 class AutoCleanupTests(LdapServerTestCase):
 
     def test_stop(self):
