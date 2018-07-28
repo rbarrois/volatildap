@@ -10,7 +10,7 @@ clean:
 	find . -type f -path '*/__pycache__/*' -delete
 	find . -type d -empty -delete
 
-install-deps:
+upgrade:
 	pip install --upgrade pip setuptools
 	pip install --upgrade -r requirements_dev.txt
 	pip freeze
