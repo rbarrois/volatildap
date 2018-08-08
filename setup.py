@@ -41,6 +41,7 @@ setup(
     download_url="https://pypi.python.org/pypi/%s/" % PACKAGE,
     packages=find_packages(exclude=['tests*']),
     platforms=["OS Independent"],
+    zip_safe=False,
     install_requires=[
     ],
     setup_requires=[
