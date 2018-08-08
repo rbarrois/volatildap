@@ -15,6 +15,7 @@ Roadmap
 *Packaging:*
 
     - Include test files in the sdist tarball.
+    - Use zest.releaser for releases
 
 .. _v1.2.0:
 

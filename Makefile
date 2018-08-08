@@ -15,11 +15,18 @@ upgrade:
 	pip install --upgrade -r requirements_dev.txt
 	pip freeze
 
+release:
+	fullrelease
+
+.PHONY: default clean upgrade release
+
 testall:
 	tox
 
 test:
 	python -Wdefault -m unittest discover $(TESTS_DIR)
+
+.PHONY: test testall
 
 # Note: we run the linter in two runs, because our __init__.py files has specific warnings we want to exclude
 lint: flake8 isort check-manifest

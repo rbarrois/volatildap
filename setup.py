@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 # This software is distributed under the two-clause BSD license.
 
+from __future__ import unicode_literals
+
 import codecs
 import os
 import re
-import sys
 
 from setuptools import find_packages, setup
 
@@ -13,7 +14,7 @@ root_dir = os.path.abspath(os.path.dirname(__file__))
 
 
 def get_version(package_name):
-    version_re = re.compile(r"^VERSION = [\"']([\w_.-]+)[\"']$")
+    version_re = re.compile(r"^__version__ = [\"']([\w_.-]+)[\"']$")
     package_components = package_name.split('.')
     init_path = os.path.join(root_dir, *(package_components + ['version.py']))
     with codecs.open(init_path, 'r', 'utf-8') as f:
