@@ -5,7 +5,6 @@
 
 from __future__ import unicode_literals
 
-
 import base64
 import codecs
 import logging
@@ -17,9 +16,7 @@ import subprocess
 import sys
 import time
 
-
 from . import compat
-
 
 logger = logging.getLogger(__name__.split('.')[0])
 

@@ -22,8 +22,16 @@ test:
 	python -Wdefault -m unittest discover $(TESTS_DIR)
 
 # Note: we run the linter in two runs, because our __init__.py files has specific warnings we want to exclude
-lint:
+lint: flake8 isort check-manifest
+
+flake8:
 	$(FLAKE8) --config .flake8 --exclude $(PACKAGE)/__init__.py $(PACKAGE) $(TESTS_DIR)
 	$(FLAKE8) --config .flake8 --ignore F401 $(PACKAGE)/__init__.py
+
+isort:
+	isort $(PACKAGE) $(TESTS_DIR) --recursive --check-only --diff --project $(PACKAGE) --project $(TESTS_DIR)
+
+check-manifest:
 	check-manifest
 
+.PHONY: lint flake8 isort check-manifest
