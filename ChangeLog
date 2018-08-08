@@ -7,6 +7,15 @@ Roadmap
 * Add support for TLS
 
 
+.. _v1.2.1:
+
+1.2.1 (unreleased)
+------------------
+
+*Packaging:*
+
+    - Include test files in the sdist tarball.
+
 .. _v1.2.0:
 
 1.2.0 (2018-07-28)

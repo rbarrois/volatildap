@@ -3,8 +3,8 @@ include requirements*.txt
 
 graft volatildap
 
-prune tests
+include Makefile tox.ini .flake8
+graft tests
 
-global-exclude .py[cod] __pycache__ .swp
+global-exclude *.py[cod] __pycache__ *.swp
 
-exclude Makefile tox.ini .flake8
