@@ -12,7 +12,9 @@ Roadmap
 1.2.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+*Improvements:*
+
+    - Add support for Python 3.6, Pypy 3.5.
 
 
 1.2.1 (2018-08-08)
