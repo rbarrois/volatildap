@@ -25,9 +25,9 @@ matrix:
 
     # Pypy
     - python: "pypy"
-      env: TOXENV=py27
+      env: TOXENV=pypy2
     - python: "pypy3"
-      env: TOXENV=py35
+      env: TOXENV=pypy3
 
     # Linting
     - python: "3.6"
