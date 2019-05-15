@@ -243,7 +243,7 @@ class LdapServer(object):
     @property
     def uri(self):
         if self.tls_config:
-            return 'ldaps://localhost:%d' % self.port
+            return 'ldaps://localhost.volatildap.org:%d' % self.port
         else:
             return 'ldap://localhost:%d' % self.port
 

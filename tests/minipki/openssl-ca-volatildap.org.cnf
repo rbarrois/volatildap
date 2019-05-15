@@ -25,8 +25,8 @@ keyUsage = critical, cRLSign, keyCertSign
 subjectKeyIdentifier = hash
 authorityKeyIdentifier=keyid:always,issuer:always
 
-# Can only sign certificates ending with .localhost
-nameConstraints = permitted;DNS:.localhost,permitted;DNS:localhost
+# Can only sign certificates ending with .volatildap.org
+nameConstraints = permitted;DNS:.volatildap.org,permitted;DNS:volatildap.org
 
 
 # Intermediate CA
@@ -43,8 +43,8 @@ keyUsage = critical, cRLSign, keyCertSign
 subjectKeyIdentifier = hash
 authorityKeyIdentifier=keyid:always,issuer:always
 
-# Can only sign certificates ending with .localhost
-nameConstraints = permitted;DNS:.localhost,permitted;DNS:localhost
+# Can only sign certificates ending with .volatildap.org
+nameConstraints = permitted;DNS:.volatildap.org,permitted;DNS:volatildap.org
 
 
 [ ca_distinguished_name ]

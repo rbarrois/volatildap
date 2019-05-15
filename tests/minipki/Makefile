@@ -1,5 +1,5 @@
 
-DOMAIN = localhost
+DOMAIN = volatildap.org
 
 export DOMAIN
 
@@ -21,7 +21,7 @@ default: bootstrap
 
 bootstrap: $(INTERM_CRT)
 
-test-cert: $(DOMAIN).crt
+test-cert: localhost.$(DOMAIN).crt
 
 .PHONY: default test-cert
 
