@@ -150,6 +150,21 @@ The ``volatildap.LdapServer`` class accepts a few parameters:
 
     *Default:* ``30``
 
+``tls_config``
+    A set of TLS certificate files for configuring the server.
+    A valid set for ``localhost`` is provided as ``volatildap.LOCALHOST_TLS_CONFIG``, but users may also provide their own:
+
+    .. code-block:: python
+
+      tls_config = volatildap.TLSConfig(
+         root=read(ca_path),
+         chain=[
+            read(intermediate_path),
+         ],
+         certificate=read(certificate_path),
+         key=read(key_path),
+      )
+
 
 Per-distribution specificities
 ------------------------------

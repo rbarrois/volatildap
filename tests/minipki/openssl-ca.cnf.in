@@ -1,0 +1,52 @@
+# This definition stops the following lines choking if HOME isn't
+# defined.
+HOME			= .
+RANDFILE		= $ENV::HOME/.rnd
+
+[ req ]
+default_bits = 2048
+prompt = no
+distinguished_name = ca_distinguished_name
+
+# Root certificate authority
+# ==========================
+
+# Use with openssl req -x509 -extensions root_certificate
+[ root_certificate ]
+
+# CA:true => this is a CA
+# pathlen:0 => It can only sign intermediate/leaf certificates
+basicConstraints = critical, CA:TRUE, pathlen:1
+
+# A CA can sign CRLs and leaf certificates
+keyUsage = critical, cRLSign, keyCertSign
+
+# Best practices. See https://www.openssl.org/docs/man1.0.2/man5/x509v3_config.html.
+subjectKeyIdentifier = hash
+authorityKeyIdentifier=keyid:always,issuer:always
+
+# Can only sign certificates ending with .${DOMAIN}
+nameConstraints = permitted;DNS:.${DOMAIN},permitted;DNS:${DOMAIN}
+
+
+# Intermediate CA
+# ===============
+
+# Use with openssl req -reqexts interm_ca
+[ interm_ca ]
+basicConstraints = critical, CA:TRUE, pathlen:0
+
+# A CA can sign CRLs and leaf certificates
+keyUsage = critical, cRLSign, keyCertSign
+
+# Best practices. See https://www.openssl.org/docs/man1.0.2/man5/x509v3_config.html.
+subjectKeyIdentifier = hash
+authorityKeyIdentifier=keyid:always,issuer:always
+
+# Can only sign certificates ending with .${DOMAIN}
+nameConstraints = permitted;DNS:.${DOMAIN},permitted;DNS:${DOMAIN}
+
+
+[ ca_distinguished_name ]
+CN = Self-signed local CA Root
+OU = Dev

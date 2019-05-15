@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 import base64
 import codecs
+import collections
 import logging
 import os
 import random
@@ -72,6 +73,9 @@ class OpenLdapPaths(object):
     ] + os.environ.get('PATH', '').split(':')
 
 
+TLSConfig = collections.namedtuple('TLSConfig', ['root', 'chain', 'certificate', 'key'])
+
+
 class LdapServer(object):
     _DATASUBDIR = 'ldif-data'
 
@@ -85,6 +89,7 @@ class LdapServer(object):
                  max_server_startup_delay=DEFAULT_STARTUP_DELAY,
                  port=None,
                  slapd_debug=DEFAULT_SLAPD_DEBUG,
+                 tls_config=None,
                  ):
 
         self.paths = OpenLdapPaths()
@@ -96,6 +101,7 @@ class LdapServer(object):
         self.max_server_startup_delay = max_server_startup_delay
         self.port = port or find_available_port()
         self.slapd_debug = slapd_debug
+        self.tls_config = tls_config
 
         self._tempdir = None
         self._process = None
@@ -130,8 +136,15 @@ class LdapServer(object):
     def _configuration_lines(self):
         def quote(base, *args):
             return base % tuple("%s" % arg.replace('\\', '\\\\').replace('"', '\\"') for arg in args)
+
         for schema in self.schemas:
             yield quote('include %s', schema)
+
+        if self.tls_config:
+            yield quote('TLSCACertificateFile %s', self._tls_chain_path)
+            yield quote('TLSCertificateFile %s', self._tls_certificate_path)
+            yield quote('TLSCertificateKeyFile %s', self._tls_key_path)
+
         yield quote('moduleload back_hdb')
         yield quote('database hdb')
         yield quote('directory %s', self._datadir)
@@ -177,6 +190,7 @@ class LdapServer(object):
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            env=self._subprocess_env
         )
         stdout, stderr = sp.communicate(ldif)
         retcode = sp.wait()
@@ -199,6 +213,7 @@ class LdapServer(object):
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            env=self._subprocess_env
         )
         stdout, stderr = sp.communicate()
         retcode = sp.wait()
@@ -227,7 +242,10 @@ class LdapServer(object):
 
     @property
     def uri(self):
-        return 'ldap://localhost:%d' % self.port
+        if self.tls_config:
+            return 'ldaps://localhost:%d' % self.port
+        else:
+            return 'ldap://localhost:%d' % self.port
 
     @property
     def _datadir(self):
@@ -236,6 +254,22 @@ class LdapServer(object):
     @property
     def _slapd_conf(self):
         return os.path.join(self._tempdir.name, 'slapd.conf')
+
+    @property
+    def _tls_ca_bundle_path(self):
+        return os.path.join(self._tempdir.name, 'ca-bundle.pem')
+
+    @property
+    def _tls_chain_path(self):
+        return os.path.join(self._tempdir.name, 'chain.pem')
+
+    @property
+    def _tls_certificate_path(self):
+        return os.path.join(self._tempdir.name, 'server.crt')
+
+    @property
+    def _tls_key_path(self):
+        return os.path.join(self._tempdir.name, 'server.key')
 
     @property
     def _core_data(self):
@@ -253,6 +287,19 @@ class LdapServer(object):
 
         # Create datadir
         os.mkdir(self._datadir)
+
+        # Manage TLS
+        if self.tls_config:
+            chain = [cert.strip() for cert in self.tls_config.chain]
+
+            with codecs.open(self._tls_ca_bundle_path, 'w', encoding='utf-8') as f:
+                f.write(self.tls_config.root)
+            with codecs.open(self._tls_chain_path, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(chain))
+            with codecs.open(self._tls_certificate_path, 'w', encoding='utf-8') as f:
+                f.write(self.tls_config.certificate)
+            with codecs.open(self._tls_key_path, 'w', encoding='utf-8') as f:
+                f.write(self.tls_config.key)
 
         # Write configuration
         with codecs.open(self._slapd_conf, 'w', encoding='utf-8') as f:
@@ -304,6 +351,7 @@ class LdapServer(object):
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            env=self._subprocess_env
         )
         stdout, stderr = sp.communicate()
         retcode = sp.wait()
@@ -326,6 +374,7 @@ class LdapServer(object):
             ] + dns,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            env=self._subprocess_env
         )
         _stdout, stderr = sp.communicate()
         retcode = sp.wait()
@@ -362,6 +411,16 @@ class LdapServer(object):
         if self._tempdir is not None:
             self._tempdir.cleanup()
             self._tempdir = None
+
+    @property
+    def _subprocess_env(self):
+        """Prepare the environment for a subprocess file."""
+        env = dict(os.environ)
+        env.update(
+            LDAPTLS_CACERT=self._tls_ca_bundle_path,
+            LDAPTLS_REQCERT='hard',
+        )
+        return env
 
     def __del__(self):
         if self._process is not None:

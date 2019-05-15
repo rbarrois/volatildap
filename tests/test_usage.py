@@ -136,6 +136,16 @@ class ResetTests(LdapServerTestCase):
         self.assertServerStopped(context)
 
 
+class TLSTests(LdapServerTestCase):
+    def test_connection(self):
+        server, context = self._launch_server(tls_config=volatildap.LOCALHOST_TLS_CONFIG)
+        self.assertEqual(server.uri[:8], 'ldaps://')
+        entry = server.get('dc=example,dc=org')
+        self.assertEqual([b'dc=example,dc=org'], entry['dn'])
+        server.stop()
+        self.assertServerStopped(context)
+
+
 class AutoCleanupTests(LdapServerTestCase):
 
     def test_stop(self):

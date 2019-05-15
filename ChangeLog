@@ -1,18 +1,12 @@
 ChangeLog
 =========
 
-Roadmap
--------
 
-* Add support for TLS
-
-
-.. _v1.2.1:
-
-1.2.3 (unreleased)
+1.3.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add support for TLS: a provided set of certificates can be passed as ``volatildap.LdapServer(tls_config=volatildap.LOCALHOST_TLS_CONFIG)``,
+  and will be used by the server. Test clients should retrieve the root CA from ``server.tls_config.root`` (holding certificate contents).
 
 
 1.2.2 (2018-08-08)

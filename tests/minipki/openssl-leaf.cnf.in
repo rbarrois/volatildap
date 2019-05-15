@@ -1,0 +1,25 @@
+# This definition stops the following lines choking if HOME isn't
+# defined.
+HOME			= .
+RANDFILE		= $ENV::HOME/.rnd
+
+
+# Basics for a default request
+# ============================
+
+[ req ]
+
+default_bits = 2048
+
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+distinguished_name = req_distinguished_name
+prompt = no
+
+[ req_distinguished_name ]
+CN = ${FQDN}
+OU = Dev
+
+# Use with openssl req -reqexts leaf_cert
+[ leaf_cert ]
+subjectAltName=DNS:${FQDN}
