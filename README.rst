@@ -171,4 +171,6 @@ Per-distribution specificities
 
 Ubuntu
     Under Ubuntu, the default AppArmor policy does not allow ``slapd`` (the LDAP daemon) to read temporary folders.
-    Users should update the ``/etc/apparmor.d/usr.sbin.slapd`` file and add ``/tmp/** rw`` there.
+    Users should update the ``/etc/apparmor.d/usr.sbin.slapd`` file and add ``/tmp/** rwk,`` there.
+    `k` option is used to acquire lock on files.
+    Users must also add a line with the path to their home. Using the variable `$HOME` won't work so you have to add the full path. Something like `/path/to/my/home/** rw,`.
