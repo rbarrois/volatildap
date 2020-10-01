@@ -1,7 +1,7 @@
 # This definition stops the following lines choking if HOME isn't
 # defined.
 HOME			= .
-RANDFILE		= ::HOME/.rnd
+RANDFILE		= $ENV::HOME/.rnd
 
 [ req ]
 default_bits = 2048
