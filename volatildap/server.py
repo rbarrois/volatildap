@@ -68,6 +68,7 @@ class OpenLdapPaths(object):
         '/usr/sbin',
         '/usr/bin',
         '/usr/lib/openldap',
+        '/usr/lib64/openldap',
         '/usr/local/sbin',
         '/usr/local/bin',
     ] + os.environ.get('PATH', '').split(':')
