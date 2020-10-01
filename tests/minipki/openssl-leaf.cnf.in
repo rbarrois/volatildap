@@ -23,3 +23,5 @@ OU = Dev
 # Use with openssl req -reqexts leaf_cert
 [ leaf_cert ]
 subjectAltName=DNS:${FQDN}
+subjectKeyIdentifier = hash
+authorityKeyIdentifier=keyid:always,issuer:always
