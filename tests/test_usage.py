@@ -54,7 +54,6 @@ class ReadWriteTests(LdapServerTestCase):
         server, context = self._launch_server(initial_data=self.data)
         entry = server.get('ou=test,dc=example,dc=org')
         self.assertEqual({
-            'dn': [b'ou=test,dc=example,dc=org'],
             'objectClass': [b'organizationalUnit'],
             'ou': [b'test'],
         }, entry)
@@ -67,7 +66,6 @@ class ReadWriteTests(LdapServerTestCase):
         server.add(self.data)
         entry = server.get('ou=test,dc=example,dc=org')
         self.assertEqual({
-            'dn': [b'ou=test,dc=example,dc=org'],
             'objectClass': [b'organizationalUnit'],
             'ou': [b'test'],
         }, entry)
@@ -127,7 +125,6 @@ class ResetTests(LdapServerTestCase):
         # Initial data should still be here
         entry = server.get('ou=test,dc=example,dc=org')
         self.assertEqual({
-            'dn': [b'ou=test,dc=example,dc=org'],
             'objectClass': [b'organizationalUnit'],
             'ou': [b'test'],
         }, entry)
@@ -141,7 +138,7 @@ class TLSTests(LdapServerTestCase):
         server, context = self._launch_server(tls_config=volatildap.LOCALHOST_TLS_CONFIG)
         self.assertEqual(server.uri[:8], 'ldaps://')
         entry = server.get('dc=example,dc=org')
-        self.assertEqual([b'dc=example,dc=org'], entry['dn'])
+        self.assertEqual([b'example'], entry['dc'])
         server.stop()
         self.assertServerStopped(context)
 

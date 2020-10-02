@@ -497,7 +497,7 @@ def ldif_to_entries(ldif_lines):
             else:
                 value = value.encode('ascii')
             attributes.setdefault(field, []).append(value)
-        dns = attributes.get('dn', [b''])
+        dns = attributes.pop('dn', [b''])
         assert len(dns) == 1
         entries[dns[0].decode('utf-8')] = attributes
     return entries
