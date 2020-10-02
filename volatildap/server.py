@@ -235,13 +235,10 @@ class LdapServer(object):
         self._populate()
 
     def _data_as_ldif(self, data):
-        # Sort by dn length, thus adding parents first.
-        for dn, attributes in sorted(data.items(), key=lambda e: (len(e[0]), e)):
-            yield ldif_encode('dn', self._normalize_dn(dn))
-            for attribute, values in sorted(attributes.items()):
-                for value in values:
-                    yield ldif_encode(attribute, value)
-            yield ''
+        return entries_to_ldif({
+            self._normalize_dn(dn): attributes
+            for dn, attributes in data.items()
+        })
 
     @property
     def uri(self):
@@ -481,6 +478,19 @@ def ldif_encode(attr, value):
 
 
 def ldif_to_entries(ldif_lines):
+    """Convert a LDIF file to a dict of dn => attributes.
+
+    Args:
+        ldif_lines: ASCII-encoded LDIF string
+
+    Returns:
+        dict(dn => dict(attribute => list(values))), where:
+        - `dn` is a string;
+        - `attribute` is a string;
+        - `value` is bytes.
+
+    Note: the object's DN is not included in the attributes.
+    """
     entries = {}
     for entry in ldif_lines.decode('ascii').split('\n\n'):
         if not entry.strip():
@@ -504,3 +514,24 @@ def ldif_to_entries(ldif_lines):
         assert len(dns) == 1
         entries[dns[0].decode('utf-8')] = attributes
     return entries
+
+
+def entries_to_ldif(entries):
+    """Convert a dict of dn => attributes to a LDIF file.
+
+    Args:
+        entries: dict(dn => dict(attribute => list(value))), where:
+            - `dn` is a string;
+            - `attribute` is a string;
+            - `value` is bytes.
+
+    Yields:
+        str: lines of the file
+    """
+    # Sort by dn length, thus adding parents first.
+    for dn, attributes in sorted(entries.items(), key=lambda e: (len(e[0]), e)):
+        yield ldif_encode('dn', dn)
+        for attribute, values in sorted(attributes.items()):
+            for value in values:
+                yield ldif_encode(attribute, value)
+        yield ''
