@@ -73,6 +73,12 @@ The ``volatildap.LdapServer`` provides a few useful methods:
 
     This will clean up all data and kill the proces.
 
+``wait()``
+    Wait until the server is asked to stop.
+
+    Mostly useful when controlling the server in another manner, or to use the volatildap
+    server as a development instance.
+
 ``add(data)``
     Add some data, see the ``initial_data`` structure below.
 

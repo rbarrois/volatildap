@@ -171,6 +171,9 @@ class LdapServer(object):
             self._shutdown()
             raise
 
+    def wait(self):
+        self._process.wait()
+
     def stop(self):
         self._shutdown()
 
