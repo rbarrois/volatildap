@@ -103,10 +103,12 @@ class BaseServer:
 
 
 # Valid characters for a non-base64-encoded LDIF value
-_BASE_LDIF = [
-    chr(i) for i in range(20, 128)
+_BASE_LDIF_ASCII_CODES = [
+    i for i in range(20, 128)
     if chr(i) not in [' ', '<', ':']
 ]
+
+_BASE_LDIF = [chr(i) for i in _BASE_LDIF_ASCII_CODES]
 
 
 def ldif_encode(attr, value):
@@ -124,7 +126,10 @@ def ldif_encode(attr, value):
         A 'key: value' or 'key:: b64value' text line.
     """
     if isinstance(value, bytes):
-        return '%s:: %s' % (attr, base64.b64encode(value).decode('ascii'))
+        if all(c in _BASE_LDIF_ASCII_CODES for c in value):
+            return '%s: %s' % (attr, value.decode('ascii'))
+        else:
+            return '%s:: %s' % (attr, base64.b64encode(value).decode('ascii'))
     elif any(c not in _BASE_LDIF for c in value):
         return '%s:: %s' % (attr, base64.b64encode(value.encode('utf-8')).decode('ascii'))
     else:
