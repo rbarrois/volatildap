@@ -140,12 +140,6 @@ class LdapServer(core.BaseServer):
         yield quote('rootdn %s', self.rootdn)
         yield quote('rootpw %s', self.rootpw)
 
-    def _normalize_dn(self, dn):
-        if not dn.endswith(self.suffix):
-            return '%s,%s' % (dn, self.suffix)
-        else:
-            return dn
-
     def start(self):
         logger.info("Starting LDAP server")
         try:
@@ -193,6 +187,9 @@ class LdapServer(core.BaseServer):
         if retcode != 0:
             raise RuntimeError("ldapadd failed with code %d: %s %s" % (retcode, stdout, stderr))
 
+    def add_ldif(self, lines):
+        self.add(core.ldif_to_entries(lines))
+
     def get(self, dn):
         dn = self._normalize_dn(dn)
         logger.info("Fetching data at %s", dn)
@@ -222,17 +219,16 @@ class LdapServer(core.BaseServer):
         entries = core.ldif_to_entries(stdout)
         return entries[dn]
 
+    def get_ldif(self, dn):
+        entry = self.get(dn)
+        lines = self._data_as_ldif({dn: entry})
+        return '\n'.join(lines)
+
     def reset(self):
         """Reset all entries except inital ones."""
         logger.info("Resetting the LDAP server to its initial data")
         self._clear()
         self._populate()
-
-    def _data_as_ldif(self, data):
-        return core.entries_to_ldif({
-            self._normalize_dn(dn): attributes
-            for dn, attributes in data.items()
-        })
 
     @property
     def _datadir(self):

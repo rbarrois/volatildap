@@ -65,6 +65,17 @@ class BaseServer:
         """
         raise NotImplementedError()
 
+    def add_ldif(self, lines):
+        """Add items to the directory, from a LDIF file lines.
+
+        Args:
+            lines: bytes, the LDIF content as a suite of bytes.
+
+        Items will be inserted by increasing dn length; this ensures that an
+        object is inserted after its containing entity.
+        """
+        self.add(ldif_to_entries(lines))
+
     def get(self, dn):
         """Fetch an item based on its DistinguisedName.
 
