@@ -15,6 +15,7 @@ import sys
 import tempfile
 import time
 
+from . import control
 from . import core
 
 logger = logging.getLogger(__name__.split('.')[0])
@@ -78,6 +79,7 @@ class LdapServer(core.BaseServer):
                  port=None,
                  slapd_debug=DEFAULT_SLAPD_DEBUG,
                  tls_config=None,
+                 control_address=(),
                  ):
 
         self.paths = OpenLdapPaths()
@@ -90,9 +92,16 @@ class LdapServer(core.BaseServer):
         self.port = port or find_available_port()
         self.slapd_debug = slapd_debug
         self.tls_config = tls_config
+        self.control = None
 
         self._tempdir = None
         self._process = None
+
+        if control_address:
+            self.control = control.ControlServer(
+                server_address=control_address,
+                ldap_server=self,
+            )
 
     def _generate_password(self):
         chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -143,6 +152,9 @@ class LdapServer(core.BaseServer):
     def start(self):
         logger.info("Starting LDAP server")
         try:
+            if self.control is not None:
+                logger.info("Starting control server")
+                self.control.start()
             if self._process is None:
                 self._setup()
                 self._start()
@@ -163,6 +175,9 @@ class LdapServer(core.BaseServer):
     def stop(self):
         logger.info("Shutting down LDAP server")
         self._shutdown()
+        if self.control is not None:
+            logger.info("Shutting down control server")
+            self.control.stop()
 
     def add(self, data):
         lines = '\n'.join(self._data_as_ldif(data))

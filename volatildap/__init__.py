@@ -13,6 +13,7 @@ else:
 
     __version__ = importlib.metadata.version('volatildap')
 
+from .control import ProxyServer
 from .core import TLSConfig
 from .server import LdapServer
 

@@ -32,6 +32,10 @@ def launch(argv):
         help="slapd debug level",
     )
     parser.add_argument(
+        '--control',
+        help="Start the HTTP control server on this address",
+    )
+    parser.add_argument(
         '--initial', type=argparse.FileType('rb'),
         help="Load initial objects from the provided LDIF file",
     )
@@ -55,6 +59,12 @@ def launch(argv):
     else:
         tls_config = None
 
+    if args.control:
+        address, port = args.control.rsplit(':', 1)
+        control_address = (address, int(port))
+    else:
+        control_address = ()
+
     instance = server.LdapServer(
         suffix=args.suffix,
         rootdn=args.rootdn,
@@ -64,10 +74,14 @@ def launch(argv):
         slapd_debug=args.debug,
         initial_data=initial,
         tls_config=tls_config,
+        control_address=control_address,
     )
     instance.start()
     sys.stdout.write("LDAP server listening on %s\n" % instance.uri)
     sys.stdout.write("Credentials: %s / %s\n" % (instance.rootdn, instance.rootpw))
+    if control_address:
+        sys.stdout.write("Control server listening on %s\n" % (instance.control.server_address,))
+
     try:
         instance.wait()
     finally:
