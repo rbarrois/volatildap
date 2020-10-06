@@ -4,6 +4,7 @@ import sys
 import toml
 
 from . import LOCALHOST_TLS_CONFIG
+from . import core
 from . import server
 
 

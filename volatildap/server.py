@@ -5,18 +5,17 @@
 
 from __future__ import unicode_literals
 
-import base64
 import codecs
-import collections
 import logging
 import os
 import random
-import re
 import socket
 import subprocess
 import sys
 import tempfile
 import time
+
+from . import core
 
 logger = logging.getLogger(__name__.split('.')[0])
 
@@ -28,14 +27,6 @@ DEFAULT_SCHEMAS = (
 )
 DEFAULT_STARTUP_DELAY = 15
 DEFAULT_SLAPD_DEBUG = 0
-
-
-class LdapError(Exception):
-    """Exceptions for volatildap"""
-
-
-class PathError(LdapError):
-    """Exception for missing paths"""
 
 
 class OpenLdapPaths(object):
@@ -56,7 +47,7 @@ class OpenLdapPaths(object):
             fullpath = os.path.join(candidate, needle)
             if os.path.isfile(fullpath):
                 return fullpath
-        raise PathError("Unable to locate file %s; tried %s" % (needle, candidates))
+        raise core.PathError("Unable to locate file %s; tried %s" % (needle, candidates))
 
     _SCHEMA_DIRS = [
         '/etc/ldap/schema',  # Debian
@@ -73,10 +64,7 @@ class OpenLdapPaths(object):
     ] + os.environ.get('PATH', '').split(':')
 
 
-TLSConfig = collections.namedtuple('TLSConfig', ['root', 'chain', 'certificate', 'key'])
-
-
-class LdapServer(object):
+class LdapServer(core.BaseServer):
     _DATASUBDIR = 'ldif-data'
 
     def __init__(self,
@@ -131,7 +119,7 @@ class LdapServer(object):
             elif skip_missing_schemas:
                 logger.warning("Unable to locate schema %s at %s", schema, schema_file)
             else:
-                raise PathError("Unable to locate schema %s at %s" % (schema, schema_file))
+                raise core.PathError("Unable to locate schema %s at %s" % (schema, schema_file))
 
     def _configuration_lines(self):
         def quote(base, *args):
@@ -226,7 +214,7 @@ class LdapServer(object):
         if retcode != 0:
             raise RuntimeError("ldapsearch failed with code %d: %r" % (retcode, stderr))
 
-        entries = ldif_to_entries(stdout)
+        entries = core.ldif_to_entries(stdout)
         return entries[dn]
 
     def reset(self):
@@ -235,17 +223,10 @@ class LdapServer(object):
         self._populate()
 
     def _data_as_ldif(self, data):
-        return entries_to_ldif({
+        return core.entries_to_ldif({
             self._normalize_dn(dn): attributes
             for dn, attributes in data.items()
         })
-
-    @property
-    def uri(self):
-        if self.tls_config:
-            return 'ldaps://localhost.volatildap.org:%d' % self.port
-        else:
-            return 'ldap://localhost:%d' % self.port
 
     @property
     def _datadir(self):
@@ -358,7 +339,7 @@ class LdapServer(object):
         if retcode != 0:
             raise RuntimeError("ldapsearch failed with code %d: %r" % (retcode, stderr))
 
-        data = ldif_to_entries(stdout)
+        data = core.ldif_to_entries(stdout)
         dns = data.keys()
         # Remove the furthest first
         dns = sorted(dns, key=lambda dn: (len(dn), dn), reverse=True)
@@ -446,92 +427,3 @@ def find_available_port():
     _address, port = s.getsockname()
     s.close()
     return port
-
-
-# Valid characters for a non-base64-encoded LDIF value
-_BASE_LDIF = [
-    chr(i) for i in range(20, 128)
-    if chr(i) not in [' ', '<', ':']
-]
-
-
-def ldif_encode(attr, value):
-    """Encode a attribute: value pair for the LDIF format.
-
-    See RFC2849 for details.
-
-    Rules are:
-    - Text containing only chars <= 127 except control, ' ', '<', ':'
-      is passed as-is
-    - Other text is encoded through UTF-8 and base64-encoded
-    - Binary data is simply base64-encoded
-
-    Returns:
-        A 'key: value' or 'key:: b64value' text line.
-    """
-    if isinstance(value, bytes):
-        return '%s:: %s' % (attr, base64.b64encode(value).decode('ascii'))
-    elif any(c not in _BASE_LDIF for c in value):
-        return '%s:: %s' % (attr, base64.b64encode(value.encode('utf-8')).decode('ascii'))
-    else:
-        return '%s: %s' % (attr, value)
-
-
-def ldif_to_entries(ldif_lines):
-    """Convert a LDIF file to a dict of dn => attributes.
-
-    Args:
-        ldif_lines: ASCII-encoded LDIF string
-
-    Returns:
-        dict(dn => dict(attribute => list(values))), where:
-        - `dn` is a string;
-        - `attribute` is a string;
-        - `value` is bytes.
-
-    Note: the object's DN is not included in the attributes.
-    """
-    entries = {}
-    for entry in ldif_lines.decode('ascii').split('\n\n'):
-        if not entry.strip():
-            continue
-
-        attributes = {}
-        for line in entry.split('\n'):
-            if not line.strip():
-                continue
-            m = re.match(r'(\w+)(:?): (.*)', line.strip())
-            if m is None:
-                raise ValueError("Invalid line in ldif output: %r" % line)
-
-            field, is_extended, value = m.groups()
-            if is_extended:
-                value = base64.b64decode(value.encode('ascii'))
-            else:
-                value = value.encode('ascii')
-            attributes.setdefault(field, []).append(value)
-        dns = attributes.pop('dn', [b''])
-        assert len(dns) == 1
-        entries[dns[0].decode('utf-8')] = attributes
-    return entries
-
-
-def entries_to_ldif(entries):
-    """Convert a dict of dn => attributes to a LDIF file.
-
-    Args:
-        entries: dict(dn => dict(attribute => list(value))), where:
-            - `dn` is a string;
-            - `attribute` is a string;
-            - `value` is bytes.
-
-    Yields:
-        str: lines of the file
-    """
-    # Sort by dn length, thus adding parents first.
-    for dn, attributes in sorted(entries.items(), key=lambda e: (len(e[0]), e)):
-        yield ldif_encode('dn', dn)
-        for attribute, values in sorted(attributes.items()):
-            for value in values:
-                yield ldif_encode(attribute, value)
-        yield ''

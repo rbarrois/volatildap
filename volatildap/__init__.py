@@ -13,7 +13,8 @@ else:
 
     __version__ = importlib.metadata.version('volatildap')
 
-from .server import LdapServer, TLSConfig
+from .core import TLSConfig
+from .server import LdapServer
 
 LOCALHOST_TLS_CONFIG = TLSConfig(
     root="""-----BEGIN CERTIFICATE-----
