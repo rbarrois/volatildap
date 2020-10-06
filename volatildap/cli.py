@@ -11,16 +11,34 @@ from . import server
 
 def launch(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port', default='', help="Port to listen on; empty for a dynamic port")
-    parser.add_argument('--suffix', default=server.DEFAULT_SUFFIX, help="LDAP suffix")
-    parser.add_argument('--rootdn', default=server.DEFAULT_ROOTDN, help="Distinguished Name of LDAP admin user")
-    parser.add_argument('--rootpw', default='', help="Password of LDAP admin user")
-    parser.add_argument('--debug', default=server.DEFAULT_SLAPD_DEBUG, type=int, help="slapd debug level")
+    parser.add_argument(
+        '--port', default='',
+        help="Port to listen on; empty for a dynamic port",
+    )
+    parser.add_argument(
+        '--suffix', default=server.DEFAULT_SUFFIX,
+        help="LDAP suffix",
+    )
+    parser.add_argument(
+        '--rootdn', default=server.DEFAULT_ROOTDN,
+        help="Distinguished Name of LDAP admin user",
+    )
+    parser.add_argument(
+        '--rootpw', default='',
+        help="Password of LDAP admin user",
+    )
+    parser.add_argument(
+        '--debug', default=server.DEFAULT_SLAPD_DEBUG, type=int,
+        help="slapd debug level",
+    )
     parser.add_argument(
         '--initial', type=argparse.FileType('rb'),
         help="Load initial objects from the provided LDIF file",
     )
-    parser.add_argument('--tls', action='store_true', help="Enable TLS")
+    parser.add_argument(
+        '--tls', action='store_true',
+        help="Enable TLS, using a built-in stack",
+    )
 
     args = parser.parse_args(argv)
     if args.initial:
