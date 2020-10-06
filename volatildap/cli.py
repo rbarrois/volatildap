@@ -1,4 +1,7 @@
+# This software is distributed under the two-clause BSD license.
+
 import argparse
+import logging
 import sys
 
 import toml
@@ -47,4 +50,5 @@ def launch(argv):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     launch(sys.argv[1:])

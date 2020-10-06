@@ -147,6 +147,7 @@ class LdapServer(core.BaseServer):
             return dn
 
     def start(self):
+        logger.info("Starting LDAP server")
         try:
             if self._process is None:
                 self._setup()
@@ -166,6 +167,7 @@ class LdapServer(core.BaseServer):
             raise core.TimeoutExpired(str(e), timeout) from e
 
     def stop(self):
+        logger.info("Shutting down LDAP server")
         self._shutdown()
 
     def add(self, data):
@@ -222,6 +224,7 @@ class LdapServer(core.BaseServer):
 
     def reset(self):
         """Reset all entries except inital ones."""
+        logger.info("Resetting the LDAP server to its initial data")
         self._clear()
         self._populate()
 
