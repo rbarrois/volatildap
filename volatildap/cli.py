@@ -4,8 +4,6 @@ import argparse
 import logging
 import sys
 
-import toml
-
 from . import LOCALHOST_TLS_CONFIG
 from . import core
 from . import server
@@ -18,12 +16,16 @@ def launch(argv):
     parser.add_argument('--rootdn', default=server.DEFAULT_ROOTDN, help="Distinguished Name of LDAP admin user")
     parser.add_argument('--rootpw', default='', help="Password of LDAP admin user")
     parser.add_argument('--debug', default=server.DEFAULT_SLAPD_DEBUG, type=int, help="slapd debug level")
-    parser.add_argument('--initial', type=argparse.FileType('r'), help="Load initial objects from the provided TOML file")
+    parser.add_argument(
+        '--initial', type=argparse.FileType('rb'),
+        help="Load initial objects from the provided LDIF file",
+    )
     parser.add_argument('--tls', action='store_true', help="Enable TLS")
 
     args = parser.parse_args(argv)
     if args.initial:
-        initial = toml.load(args.initial)
+        lines = b''.join(args.initial)
+        initial = core.ldif_to_entries(lines)
     else:
         initial = {}
     if args.tls:
