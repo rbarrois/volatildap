@@ -159,8 +159,11 @@ class LdapServer(core.BaseServer):
             self._shutdown()
             raise
 
-    def wait(self):
-        self._process.wait()
+    def wait(self, timeout=None):
+        try:
+            self._process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired as e:
+            raise core.TimeoutExpired(str(e), timeout) from e
 
     def stop(self):
         self._shutdown()

@@ -15,6 +15,12 @@ class PathError(LdapError):
     """Exception for missing paths"""
 
 
+class TimeoutExpired(LdapError):
+    def __init__(self, message, timeout=None):
+        super().__init__(message)
+        self.timeout = timeout
+
+
 TLSConfig = collections.namedtuple('TLSConfig', ['root', 'chain', 'certificate', 'key'])
 
 
