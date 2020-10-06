@@ -36,6 +36,10 @@ def launch(argv):
         help="Load initial objects from the provided LDIF file",
     )
     parser.add_argument(
+        '--schemas', nargs='*', default=server.DEFAULT_SCHEMAS,
+        help="Schemas to load (multi-valued)",
+    )
+    parser.add_argument(
         '--tls', action='store_true',
         help="Enable TLS, using a built-in stack",
     )
@@ -55,6 +59,7 @@ def launch(argv):
         suffix=args.suffix,
         rootdn=args.rootdn,
         rootpw=args.rootpw,
+        schemas=args.schemas,
         port=int(args.port) if args.port else None,
         slapd_debug=args.debug,
         initial_data=initial,
