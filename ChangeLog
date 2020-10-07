@@ -2,10 +2,13 @@ ChangeLog
 =========
 
 
-1.3.1 (unreleased)
+1.4.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Allow adding and reading LDIF data, through ``server.add_ldif()`` and ``server.get_ldif()``
+- Add a simple command line to start a custom instance
+- Add a HTTP-based control server, with an accompanying client - useful for starting volatildap in
+  a container.
 
 
 1.3.0 (2019-05-15)

@@ -25,7 +25,7 @@ volatildap
 
 Its main features include:
 
-* **Simple configuration:** Don't provide anything the LDAP server will start with sane defaults
+* **Simple configuration:** Don't provide anything; the LDAP server will start with sane defaults
 * **Built-in cleanup:** As soon as the test ends / the test process exits, the server is instantly removed
 * **Cross-distribution setup:** Automatically discover system paths for OpenLDAP binaries, schemas, etc.
 
@@ -89,9 +89,38 @@ The ``volatildap.LdapServer`` provides a few useful methods:
 
     Raises ``KeyError`` if the distinguished name is unknown to the underlying database.
 
+``add_ldif(contents)``
+    Add lines from a LDIF file - contents should be bytes.
+
+``get_ldif(dn)``
+    Return an entry as a list of lines for a LDIF file
+
 ``reset()``
     Restore the server to its pristine, initial state.
     This includes loading the inital_data.
+
+
+It also exposes the following attributes:
+
+``uri``
+    The URI to use to contect the server (e.g ``ldap://localhost:10389/``)
+
+``rootdn``
+    The distinguishedName of the admin account
+
+``rootpw``
+    The password of the admin account
+
+``suffix``
+    The suffix used by the LDAP server
+
+``port``
+    The TCP port the LDAP server is listening on
+
+``tls_config``
+    A named tuple, containing the TLS attributes.
+    The only guaranteed attribute is ``tls_config.root``, which contains the PEM-formatted
+    server certificate.
 
 
 Configuration
@@ -170,6 +199,55 @@ The ``volatildap.LdapServer`` class accepts a few parameters:
          certificate=read(certificate_path),
          key=read(key_path),
       )
+
+
+Command line
+------------
+
+volatildap provides a command line entrypoint for simplicity: ``python -m volatildap.cli``
+
+Its usage follows:
+
+.. code-block::
+
+    usage: cli.py [-h] [--port PORT] [--suffix SUFFIX] [--rootdn ROOTDN]
+		  [--rootpw ROOTPW] [--debug DEBUG] [--control CONTROL]
+		  [--initial INITIAL] [--schemas [SCHEMAS [SCHEMAS ...]]] [--tls]
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --port PORT           Port to listen on; empty for a dynamic port
+      --suffix SUFFIX       LDAP suffix
+      --rootdn ROOTDN       Distinguished Name of LDAP admin user
+      --rootpw ROOTPW       Password of LDAP admin user
+      --debug DEBUG         slapd debug level
+      --control CONTROL     Start the HTTP control server on this address
+      --initial INITIAL     Load initial objects from the provided LDIF file
+      --schemas [SCHEMAS [SCHEMAS ...]]
+			    Schemas to load (multi-valued)
+      --tls                 Enable TLS, using a built-in stack
+
+
+Remote control
+--------------
+
+Once such a server has been started, if a control server has been provided
+(for instance as ``--control :10380``), it is possible to start a Python proxy to control it:
+
+.. code-block::
+
+    def setUpClass(cls):
+	super().setUpClass()
+        cls._slapd = volatildap.ProxyServer('http://localhost:10380')
+
+All commands available on a normal instance will be available on the proxy:
+``reset``, ``start``, ``stop``, ``add``, ``add_ldif``, ``get``, ``get_ldif``.
+
+The readonly attributes are also available: ``uri``, ``suffix``, ``rootdn``,
+``rootpw``, ``port``, ``tls_config``.
+
+When using TLS, the server's root certificate authority can be accessed
+through ``proxy.tls_config.root``.
 
 
 Per-distribution specificities
