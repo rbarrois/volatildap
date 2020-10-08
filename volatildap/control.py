@@ -152,6 +152,8 @@ class ProxyServer(core.BaseServer):
 
     def get(self, dn):
         response = requests.get(self._path('entry/') + dn)
+        if response.status_code == 404:
+            raise KeyError(dn)
         response.raise_for_status()
         entries = core.ldif_to_entries(response.content)
         assert len(entries) == 1
