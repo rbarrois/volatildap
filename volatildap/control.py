@@ -36,6 +36,7 @@ class ControlServer(HTTPServer):
         self._thread = threading.Thread(
             target=self.serve_forever,
             name='control-server',
+            daemon=True,
         )
         self._thread.start()
 

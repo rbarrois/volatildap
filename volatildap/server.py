@@ -175,9 +175,6 @@ class LdapServer(core.BaseServer):
     def stop(self):
         logger.info("Shutting down LDAP server")
         self._shutdown()
-        if self.control is not None:
-            logger.info("Shutting down control server")
-            self.control.stop()
 
     def add(self, data):
         lines = '\n'.join(self._data_as_ldif(data))
