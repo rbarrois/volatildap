@@ -3,6 +3,7 @@
 import http.server
 import json
 import subprocess
+import sys
 import threading
 import time
 from urllib.parse import urljoin
@@ -11,8 +12,13 @@ import requests
 
 from . import core
 
+if sys.version_info < (3, 7):
+    HTTPServer = http.server.HTTPServer
+else:
+    HTTPServer = http.server.ThreadingHTTPServer
 
-class ControlServer(http.server.ThreadingHTTPServer):
+
+class ControlServer(HTTPServer):
     """The HTTP control server.
 
     Launched in a background thread; keeps a reference to the actual
