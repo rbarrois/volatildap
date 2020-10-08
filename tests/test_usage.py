@@ -11,14 +11,24 @@ import volatildap
 
 
 class LdapServerTestCase(unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.server = None
+        self.context = None
+
     def _launch_server(self, **kwargs):
-        server = volatildap.LdapServer(**kwargs)
-        server.start()
-        context = {
-            'dirname': server._tempdir.name,
-            'pid': server._process.pid,
+        self.server = volatildap.LdapServer(**kwargs)
+        self.server.start()
+        self.context = {
+            'dirname': self.server._tempdir.name,
+            'pid': self.server._process.pid,
         }
-        return server, context
+
+    def tearDown(self):
+        if self.server is not None:
+            self.server.stop()
+            self.assertServerStopped(self.context)
+        super().tearDown()
 
     def assertServerStopped(self, context, max_delay=5):
         now = time.time()
@@ -51,52 +61,40 @@ class ReadWriteTests(LdapServerTestCase):
     }
 
     def test_initial_data(self):
-        server, context = self._launch_server(initial_data=self.data)
-        entry = server.get('ou=test,dc=example,dc=org')
+        self._launch_server(initial_data=self.data)
+        entry = self.server.get('ou=test,dc=example,dc=org')
         self.assertEqual({
             'objectClass': [b'organizationalUnit'],
             'ou': [b'test'],
         }, entry)
-
-        server.stop()
-        self.assertServerStopped(context)
 
     def test_post_start_add(self):
-        server, context = self._launch_server()
-        server.add(self.data)
-        entry = server.get('ou=test,dc=example,dc=org')
+        self._launch_server()
+        self.server.add(self.data)
+        entry = self.server.get('ou=test,dc=example,dc=org')
         self.assertEqual({
             'objectClass': [b'organizationalUnit'],
             'ou': [b'test'],
         }, entry)
 
-        server.stop()
-        self.assertServerStopped(context)
-
     def test_get_missing_entry(self):
-        server, context = self._launch_server()
+        self._launch_server()
         with self.assertRaises(KeyError):
-            server.get('ou=test,dc=example,dc=org')
-
-        server.stop()
-        self.assertServerStopped(context)
+            self.server.get('ou=test,dc=example,dc=org')
 
     def test_clear_data(self):
-        server, context = self._launch_server()
-        server.add(self.data)
-        self.assertIsNotNone(server.get('ou=test,dc=example,dc=org'))
+        self._launch_server()
+        self.server.add(self.data)
+        self.assertIsNotNone(self.server.get('ou=test,dc=example,dc=org'))
 
-        server.start()  # Actually a restart
+        self.server.start()  # Actually a restart
 
         # Custom data has been removed
         with self.assertRaises(KeyError):
-            server.get('ou=test,dc=example,dc=org')
+            self.server.get('ou=test,dc=example,dc=org')
 
         # Core data is still there
-        self.assertIsNotNone(server.get('dc=example,dc=org'))
-
-        server.stop()
-        self.assertServerStopped(context)
+        self.assertIsNotNone(self.server.get('dc=example,dc=org'))
 
 
 class ResetTests(LdapServerTestCase):
@@ -108,39 +106,34 @@ class ResetTests(LdapServerTestCase):
     }
 
     def test_cleanup(self):
-        server, context = self._launch_server(initial_data=self.data)
+        self._launch_server(initial_data=self.data)
         extra = {
             'ou=subarea,ou=test': {
                 'objectClass': ['organizationalUnit'],
             },
         }
-        server.add(extra)
+        self.server.add(extra)
 
-        entry = server.get('ou=subarea,ou=test,dc=example,dc=org')
-        server.reset()
+        entry = self.server.get('ou=subarea,ou=test,dc=example,dc=org')
+        self.server.reset()
 
         # Extra data should have been removed
-        self.assertRaises(KeyError, server.get, 'ou=subarea,ou=test,dc=example,dc=org')
+        self.assertRaises(KeyError, self.server.get, 'ou=subarea,ou=test,dc=example,dc=org')
 
         # Initial data should still be here
-        entry = server.get('ou=test,dc=example,dc=org')
+        entry = self.server.get('ou=test,dc=example,dc=org')
         self.assertEqual({
             'objectClass': [b'organizationalUnit'],
             'ou': [b'test'],
         }, entry)
 
-        server.stop()
-        self.assertServerStopped(context)
-
 
 class TLSTests(LdapServerTestCase):
     def test_connection(self):
-        server, context = self._launch_server(tls_config=volatildap.LOCALHOST_TLS_CONFIG)
-        self.assertEqual(server.uri[:8], 'ldaps://')
-        entry = server.get('dc=example,dc=org')
+        self._launch_server(tls_config=volatildap.LOCALHOST_TLS_CONFIG)
+        self.assertEqual(self.server.uri[:8], 'ldaps://')
+        entry = self.server.get('dc=example,dc=org')
         self.assertEqual([b'example'], entry['dc'])
-        server.stop()
-        self.assertServerStopped(context)
 
 
 class AutoCleanupTests(LdapServerTestCase):
@@ -148,8 +141,7 @@ class AutoCleanupTests(LdapServerTestCase):
     def test_stop(self):
         """Deleting the LdapServer object causes its cleanup."""
 
-        server, context = self._launch_server()
+        self._launch_server()
 
-        server.stop()
 
-        self.assertServerStopped(context)
+
