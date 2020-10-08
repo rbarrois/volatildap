@@ -2,7 +2,7 @@
 
 check-manifest
 flake8
-isort
+isort>=5.0.0
 psutil
 tox
 zest.releaser[recommended]

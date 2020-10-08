@@ -36,7 +36,7 @@ flake8:
 	$(FLAKE8) --config .flake8 --ignore F401 $(PACKAGE)/__init__.py
 
 isort:
-	isort $(PACKAGE) $(TESTS_DIR) --recursive --check-only --diff --project $(PACKAGE) --project $(TESTS_DIR)
+	isort $(PACKAGE) $(TESTS_DIR) --check-only --diff --project $(PACKAGE) --project $(TESTS_DIR)
 
 check-manifest:
 	check-manifest
