@@ -2,7 +2,7 @@ ChangeLog
 =========
 
 
-1.4.0 (unreleased)
+1.4.0 (2020-10-08)
 ------------------
 
 - Allow adding and reading LDIF data, through ``server.add_ldif()`` and ``server.get_ldif()``
