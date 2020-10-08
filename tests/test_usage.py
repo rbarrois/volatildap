@@ -2,12 +2,27 @@
 # This software is distributed under the two-clause BSD license.
 
 import os
+import socket
 import time
 import unittest
 
 import psutil
 
 import volatildap
+
+
+def find_available_port():
+    """Find an available port.
+
+    Simple trick: open a socket to localhost, see what port was allocated.
+
+    Could fail in highly concurrent setups, though.
+    """
+    s = socket.socket()
+    s.bind(('localhost', 0))
+    _address, port = s.getsockname()
+    s.close()
+    return port
 
 
 class LdapServerTestCase(unittest.TestCase):
@@ -144,4 +159,85 @@ class AutoCleanupTests(LdapServerTestCase):
         self._launch_server()
 
 
+class ControlTests(LdapServerTestCase):
+    def setUp(self):
+        super().setUp()
+        self.proxy = None
 
+    def tearDown(self):
+        if self.proxy:
+            self.proxy.stop()
+        super().tearDown()
+
+    def _launch_server(self, **kwargs):
+        control_port = find_available_port()
+        super()._launch_server(
+            control_address=('localhost', control_port),
+            **kwargs,
+        )
+        self.proxy = volatildap.ProxyServer('http://localhost:%d/' % control_port)
+
+    def test_launch_control(self):
+        self._launch_server()
+        self.assertEqual(
+            self.server.uri,
+            self.proxy.uri,
+        )
+        self.assertEqual('dc=example,dc=org', self.proxy.suffix)
+        self.assertEqual(self.server.rootdn, self.proxy.rootdn)
+        self.assertEqual(self.server.rootpw, self.proxy.rootpw)
+
+    def test_tls(self):
+        """The server CA should be available through the proxy."""
+        self._launch_server(tls_config=volatildap.LOCALHOST_TLS_CONFIG)
+        self.assertEqual(self.proxy.uri[:8], 'ldaps://')
+        self.assertIsNotNone(self.proxy.tls_config)
+        self.assertIsNotNone(self.proxy.tls_config.root)
+
+    def test_get(self):
+        initial = {'ou=people': {
+            'objectClass': ['organizationalUnit'],
+            'ou': ['people'],
+        }}
+        self._launch_server(
+            initial_data=initial,
+        )
+
+        entry = self.proxy.get('ou=people')
+        self.assertEqual(
+            {
+                'objectClass': [b'organizationalUnit'],
+                'ou': [b'people'],
+            },
+            entry,
+        )
+
+    def test_add(self):
+        self._launch_server()
+        data = {'ou=people': {
+            'objectClass': ['organizationalUnit'],
+            'ou': ['people'],
+        }}
+        self.proxy.add(data)
+        entry = self.proxy.get('ou=people')
+        self.assertEqual(
+            {
+                'objectClass': [b'organizationalUnit'],
+                'ou': [b'people'],
+            },
+            entry,
+        )
+
+    def test_reset(self):
+        self._launch_server()
+        data = {'ou=people': {
+            'objectClass': ['organizationalUnit'],
+            'ou': ['people'],
+        }}
+        self.proxy.add(data)
+        # Ensure the data is visible
+        self.proxy.get('ou=people')
+        self.proxy.reset()
+
+        with self.assertRaises(KeyError):
+            self.proxy.get('ou=people')
