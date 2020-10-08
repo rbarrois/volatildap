@@ -15,9 +15,8 @@ import re
 import socket
 import subprocess
 import sys
+import tempfile
 import time
-
-from . import compat
 
 logger = logging.getLogger(__name__.split('.')[0])
 
@@ -283,7 +282,7 @@ class LdapServer(object):
         }
 
     def _setup(self):
-        self._tempdir = compat.TemporaryDirectory()
+        self._tempdir = tempfile.TemporaryDirectory()
         logger.info("Setting up openldap server in %s", self._tempdir.name)
 
         # Create datadir
