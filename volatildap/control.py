@@ -25,6 +25,7 @@ class ControlServer(http.server.ThreadingHTTPServer):
 
     def start(self):
         if self._thread is not None:
+            # Already started
             return
         self._thread = threading.Thread(
             target=self.serve_forever,
@@ -33,7 +34,10 @@ class ControlServer(http.server.ThreadingHTTPServer):
         self._thread.start()
 
     def stop(self):
+        if self._thread is None:
+            return
         self.shutdown()
+        self.server_close()
         self._thread.join()
         self._thread = None
 
