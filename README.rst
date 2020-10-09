@@ -117,6 +117,9 @@ It also exposes the following attributes:
 ``port``
     The TCP port the LDAP server is listening on
 
+``host``
+    The hostname the LDAP server is listening on
+
 ``tls_config``
     A named tuple, containing the TLS attributes.
     The only guaranteed attribute is ``tls_config.root``, which contains the PEM-formatted
@@ -175,6 +178,11 @@ The ``volatildap.LdapServer`` class accepts a few parameters:
 
     *Default:* An available TCP port on the system
 
+``host``
+    The hostname or IP to listen on.
+
+    *Default:* ``localhost``
+
 ``slapd_debug``
     The debug level for slapd; see ``slapd.conf``
 
@@ -210,13 +218,15 @@ Its usage follows:
 
 .. code-block::
 
-    usage: cli.py [-h] [--port PORT] [--suffix SUFFIX] [--rootdn ROOTDN]
-		  [--rootpw ROOTPW] [--debug DEBUG] [--control CONTROL]
-		  [--initial INITIAL] [--schemas [SCHEMAS [SCHEMAS ...]]] [--tls]
+    usage: cli.py [-h] [--port PORT] [--host HOST] [--suffix SUFFIX]
+                  [--rootdn ROOTDN] [--rootpw ROOTPW] [--debug DEBUG]
+                  [--control CONTROL] [--initial INITIAL]
+                  [--schemas [SCHEMAS [SCHEMAS ...]]] [--tls]
 
     optional arguments:
       -h, --help            show this help message and exit
       --port PORT           Port to listen on; empty for a dynamic port
+      --host HOST           Host to listen on; defaults to localhost
       --suffix SUFFIX       LDAP suffix
       --rootdn ROOTDN       Distinguished Name of LDAP admin user
       --rootpw ROOTPW       Password of LDAP admin user
@@ -244,7 +254,7 @@ All commands available on a normal instance will be available on the proxy:
 ``reset``, ``start``, ``stop``, ``add``, ``add_ldif``, ``get``, ``get_ldif``.
 
 The readonly attributes are also available: ``uri``, ``suffix``, ``rootdn``,
-``rootpw``, ``port``, ``tls_config``.
+``rootpw``, ``port``, ``host``, ``tls_config``.
 
 When using TLS, the server's root certificate authority can be accessed
 through ``proxy.tls_config.root``.

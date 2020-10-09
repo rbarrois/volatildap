@@ -28,6 +28,7 @@ class BaseServer:
     rootdn: str
     rootpw: str
     suffix: str
+    host: str
     port: int
     tls_config: TLSConfig
 
@@ -114,9 +115,12 @@ class BaseServer:
     @property
     def uri(self):
         if self.tls_config:
-            return 'ldaps://localhost.volatildap.org:%d' % self.port
+            # localhost.volatildap.org is guaranteed to point to ::1 / 127.0.0.1.
+            # It matches the default included TLSConfig.
+            host = 'localhost.volatildap.org' if self.host == 'localhost' else self.host
+            return 'ldaps://%s:%d' % (host, self.port)
         else:
-            return 'ldap://localhost:%d' % self.port
+            return 'ldap://%s:%d' % (self.host, self.port)
 
 
 # Valid characters for a non-base64-encoded LDIF value

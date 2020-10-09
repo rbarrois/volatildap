@@ -77,6 +77,7 @@ class LdapServer(core.BaseServer):
                  skip_missing_schemas=False,
                  max_server_startup_delay=DEFAULT_STARTUP_DELAY,
                  port=None,
+                 host='localhost',
                  slapd_debug=DEFAULT_SLAPD_DEBUG,
                  tls_config=None,
                  control_address=(),
@@ -90,6 +91,7 @@ class LdapServer(core.BaseServer):
         self.initial_data = initial_data or {}
         self.max_server_startup_delay = max_server_startup_delay
         self.port = port or find_available_port()
+        self.host = host
         self.slapd_debug = slapd_debug
         self.tls_config = tls_config
         self.control = None
@@ -387,7 +389,7 @@ class LdapServer(core.BaseServer):
 
             s = socket.socket()
             try:
-                s.connect(('localhost', self.port))
+                s.connect((self.host, self.port))
             except socket.error:
                 # Not ready yet, sleep
                 time.sleep(0.5)

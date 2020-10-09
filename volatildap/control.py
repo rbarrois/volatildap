@@ -97,6 +97,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             rootdn=self.ldap.rootdn,
             rootpw=self.ldap.rootpw,
             port=self.ldap.port,
+            host=self.ldap.host,
             tls_root=tls_config.root if tls_config else None
         )
         self.send_response(200)
@@ -135,6 +136,7 @@ class ProxyServer(core.BaseServer):
         self.rootpw = config['rootpw']
         self.suffix = config['suffix']
         self.port = config['port']
+        self.host = config['host']
         if config['tls_root']:
             self.tls_config = core.TLSConfig(
                 root=config['tls_root'],

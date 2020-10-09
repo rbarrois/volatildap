@@ -16,6 +16,10 @@ def launch(argv):
         help="Port to listen on; empty for a dynamic port",
     )
     parser.add_argument(
+        '--host', default='localhost',
+        help="Host to listen on; defaults to localhost",
+    )
+    parser.add_argument(
         '--suffix', default=server.DEFAULT_SUFFIX,
         help="LDAP suffix",
     )
@@ -71,6 +75,7 @@ def launch(argv):
         rootpw=args.rootpw,
         schemas=args.schemas,
         port=int(args.port) if args.port else None,
+        host=args.host,
         slapd_debug=args.debug,
         initial_data=initial,
         tls_config=tls_config,
