@@ -144,8 +144,8 @@ class LdapServer(core.BaseServer):
             yield quote('TLSCertificateFile %s', self._tls_certificate_path)
             yield quote('TLSCertificateKeyFile %s', self._tls_key_path)
 
-        yield quote('moduleload back_hdb')
-        yield quote('database hdb')
+        yield quote('moduleload back_mdb')
+        yield quote('database mdb')
         yield quote('directory %s', self._datadir)
         yield quote('suffix %s', self.suffix)
         yield quote('rootdn %s', self.rootdn)
